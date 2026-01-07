@@ -103,11 +103,8 @@ if [ -z "$TABLE" ] && [ -z "$TABLES" ] && [ -z "$ALL_FLAG" ] && [ -z "$LIST_FLAG
     exit 1
 fi
 
-echo -e "${BLUE}"
-echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║              ICEBERG V2 TO V3 UPGRADE TOOL                     ║"
-echo "╚════════════════════════════════════════════════════════════════╝"
-echo -e "${NC}"
+echo -e "${BLUE}=== ICEBERG V2 TO V3 UPGRADE TOOL ===${NC}"
+echo ""
 
 # Load environment
 if [ -f .env ]; then
@@ -173,11 +170,9 @@ eval $CMD
 
 echo ""
 if [ -z "$DRY_RUN" ] && [ -z "$LIST_FLAG" ]; then
-    echo -e "${GREEN}════════════════════════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}✅ Upgrade complete!${NC}"
-    echo -e "${GREEN}${NC}"
-    echo -e "${GREEN}Tables have been upgraded to V3 and compacted.${NC}"
-    echo -e "${GREEN}You can now query them in Databricks.${NC}"
-    echo -e "${GREEN}════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}Upgrade complete!${NC}"
+    echo ""
+    echo "Tables have been upgraded to V3 and compacted."
+    echo "You can now query them in Databricks."
 fi
 

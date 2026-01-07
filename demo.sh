@@ -17,11 +17,8 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-echo -e "${BLUE}"
-echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║         ICEBERG V2 TO V3 UPGRADE - DEMO MODE                   ║"
-echo "╚════════════════════════════════════════════════════════════════╝"
-echo -e "${NC}"
+echo -e "${BLUE}=== ICEBERG V2 TO V3 UPGRADE - DEMO MODE ===${NC}"
+echo ""
 
 # Load environment
 if [ -f .env ]; then
@@ -50,9 +47,7 @@ if [ -n "$MISSING" ]; then
 fi
 
 echo ""
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}STEP 1: Create Demo V2 Table with Merge-on-Read Deletes${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}--- STEP 1: Create Demo V2 Table with Merge-on-Read Deletes ---${NC}"
 echo ""
 
 cd internal
@@ -67,14 +62,12 @@ fi
 TABLE_NAME="v2_mor_demo"
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}The demo table has been created with V2 merge-on-read deletes.${NC}"
-echo -e "${YELLOW}${NC}"
+echo ""
 echo -e "${YELLOW}In Databricks, try to query:${NC}"
 echo -e "${YELLOW}  SELECT * FROM your_catalog.${GLUE_DATABASE}.${TABLE_NAME}${NC}"
-echo -e "${YELLOW}${NC}"
+echo ""
 echo -e "${YELLOW}You should see an error about unsupported delete files!${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 read -p "Press Enter after you've seen the error in Databricks (or 's' to skip)... " response
@@ -83,9 +76,7 @@ if [ "$response" = "s" ]; then
 fi
 
 echo ""
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}STEP 2: Upgrade Table to V3 and Run Compaction${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}--- STEP 2: Upgrade Table to V3 and Run Compaction ---${NC}"
 echo ""
 
 cd internal
@@ -93,17 +84,15 @@ python3 upgrade_table.py -d "$GLUE_DATABASE" -t "$TABLE_NAME"
 cd ..
 
 echo ""
-echo -e "${GREEN}════════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}✅ UPGRADE COMPLETE!${NC}"
-echo -e "${GREEN}${NC}"
-echo -e "${GREEN}The table has been upgraded to V3 and compacted.${NC}"
-echo -e "${GREEN}All merge-on-read delete files have been applied and removed.${NC}"
-echo -e "${GREEN}${NC}"
-echo -e "${GREEN}Now try the query again in Databricks:${NC}"
-echo -e "${GREEN}  SELECT * FROM your_catalog.${GLUE_DATABASE}.${TABLE_NAME}${NC}"
-echo -e "${GREEN}${NC}"
-echo -e "${GREEN}It should work now! 🎉${NC}"
-echo -e "${GREEN}════════════════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}UPGRADE COMPLETE!${NC}"
+echo ""
+echo "The table has been upgraded to V3 and compacted."
+echo "All merge-on-read delete files have been applied and removed."
+echo ""
+echo "Now try the query again in Databricks:"
+echo "  SELECT * FROM your_catalog.${GLUE_DATABASE}.${TABLE_NAME}"
+echo ""
+echo "It should work now!"
 
 # Optional: Verify in Databricks
 if [ -n "$DATABRICKS_HOST" ] && [ -n "$DATABRICKS_TOKEN" ] && [ -n "$CATALOG_NAME" ]; then
