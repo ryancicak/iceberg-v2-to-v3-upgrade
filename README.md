@@ -27,8 +27,10 @@ CALL glue_catalog.system.rewrite_data_files(
   table => 'your_db.your_table',
   options => map('rewrite-all', 'true', 'delete-file-threshold', '1')
 );
+```
 
--- Step 3: Expire old snapshots (removes old delete files)
+**Optional - clean up old snapshots for storage savings:**
+```sql
 CALL glue_catalog.system.expire_snapshots(
   table => 'your_db.your_table',
   older_than => TIMESTAMP '2030-01-01 00:00:00',
