@@ -1,15 +1,46 @@
 # Iceberg V2 to V3 Upgrade Tool
 
-Scripts to upgrade Iceberg tables from V2 to V3 so Databricks can read merge-on-read deletes.
+Upgrade Iceberg tables from V2 to V3 for Databricks UC Federation MoR delete support.
 
-## Background
+## The Problem
 
-Databricks UC Federation can't read V2 Iceberg tables that use merge-on-read (MoR) deletes. V3 fixes this, but you also need to compact after upgrading to clear out the old delete files.
+Databricks UC Federation can't read V2 Iceberg tables with merge-on-read (MoR) delete files.
 
+## The Fix
+
+Upgrade to V3 + compact. **Must use EMR 7.12+** (Iceberg 1.10+).
+
+| EMR Version | Iceberg | V3 Support |
+|-------------|---------|------------|
+| < 7.12 | < 1.10 | BROKEN - missing `next-row-id` |
+| **7.12+** | **1.10+** | Works |
+
+## Upgrade Steps (EMR 7.12+ only!)
+
+```sql
+-- Step 1: Upgrade to V3
+ALTER TABLE glue_catalog.your_db.your_table 
+SET TBLPROPERTIES ('format-version' = '3');
+
+-- Step 2: Compact with delete file removal
+CALL glue_catalog.system.rewrite_data_files(
+  table => 'your_db.your_table',
+  options => map('rewrite-all', 'true', 'delete-file-threshold', '1')
+);
+
+-- Step 3: Expire old snapshots (removes old delete files)
+CALL glue_catalog.system.expire_snapshots(
+  table => 'your_db.your_table',
+  older_than => TIMESTAMP '2030-01-01 00:00:00',
+  retain_last => 1
+);
 ```
-Step 1: ALTER TABLE ... SET TBLPROPERTIES ('format-version' = '3')
-Step 2: CALL system.rewrite_data_files(..., options => map('rewrite-all', 'true'))
-```
+
+## Warning: Upgrading on Old EMR Breaks Tables!
+
+If you upgrade to V3 on EMR < 7.12, the table becomes unreadable by both Databricks AND EMR 7.12+. The V3 metadata will be missing the required `next-row-id` field.
+
+**Fix for broken V3 tables:** Metadata surgery to add `next-row-id`, then compact on EMR 7.12+.
 
 ## Setup
 
@@ -28,48 +59,23 @@ Required env vars:
 
 ## Usage
 
-**Demo mode** - full end-to-end test:
+**Demo mode:**
 ```bash
 ./demo.sh
 ```
 
-This runs through:
-1. Create V2 table with MoR deletes (Databricks fails to read)
-2. Upgrade to V3 + compact (Databricks can read)
-3. Run NEW delete on V3 (Databricks can still read - proves V3 MoR works)
-
 **Upgrade existing tables:**
 ```bash
-# single table
 ./upgrade.sh -d my_database -t my_table
-
-# multiple tables
-./upgrade.sh -d my_database --tables "table1,table2"
-
-# all iceberg tables in a database
 ./upgrade.sh -d my_database --all
-
-# dry run
 ./upgrade.sh -d my_database --all --dry-run
-
-# list tables and versions
-./upgrade.sh -d my_database --list
 ```
-
-## Notes
-
-- Compaction temporarily doubles storage until old files are cleaned up
-- Large tables take a while to compact
-- Make sure your EMR role has Lake Formation permissions on the database/tables
-- Test on non-prod first
 
 ## Troubleshooting
 
-**Lake Formation errors:** Run `python internal/lake_formation_setup.py -d my_db -p YOUR_EMR_ROLE_ARN`
+**Lake Formation errors:** `python internal/lake_formation_setup.py -d my_db -p YOUR_EMR_ROLE_ARN`
 
-**EMR SSH fails:** Check PEM permissions (`chmod 600`), security group allows port 22, cluster is running
-
-**Compaction slow:** Use a bigger cluster or compact by partition
+**EMR SSH fails:** Check PEM permissions (`chmod 600`), security group, cluster state
 
 ## Author
 
