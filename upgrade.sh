@@ -92,13 +92,13 @@ done
 
 # Validate arguments
 if [ -z "$DATABASE" ]; then
-    echo -e "${RED}❌ --database is required${NC}"
+    echo -e "${RED}[ERROR] --database is required${NC}"
     show_help
     exit 1
 fi
 
 if [ -z "$TABLE" ] && [ -z "$TABLES" ] && [ -z "$ALL_FLAG" ] && [ -z "$LIST_FLAG" ]; then
-    echo -e "${RED}❌ Please specify --table, --tables, --all, or --list${NC}"
+    echo -e "${RED}[ERROR] Please specify --table, --tables, --all, or --list${NC}"
     show_help
     exit 1
 fi
@@ -109,7 +109,7 @@ echo ""
 # Load environment
 if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
-    echo -e "${GREEN}✓ Loaded .env file${NC}"
+    echo -e "${GREEN}[OK] Loaded .env file${NC}"
 else
     echo -e "${YELLOW}⚠ No .env file found. Using environment variables.${NC}"
 fi
@@ -124,7 +124,7 @@ for var in $REQUIRED_VARS; do
 done
 
 if [ -n "$MISSING" ]; then
-    echo -e "${RED}❌ Missing required environment variables:${MISSING}${NC}"
+    echo -e "${RED}[ERROR] Missing required environment variables:${MISSING}${NC}"
     exit 1
 fi
 

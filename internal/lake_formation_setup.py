@@ -43,12 +43,12 @@ def grant_database_permissions(config, principal_arn, database_name):
             Permissions=['ALL', 'ALTER', 'CREATE_TABLE', 'DESCRIBE', 'DROP'],
             PermissionsWithGrantOption=['ALL', 'ALTER', 'CREATE_TABLE', 'DESCRIBE', 'DROP']
         )
-        print(f"  ✅ Database permissions granted")
+        print(f"  [OK] Database permissions granted")
     except Exception as e:
         if "AlreadyExists" in str(e):
-            print(f"  ✓ Permissions already exist")
+            print(f"  [OK] Permissions already exist")
         else:
-            print(f"  ❌ Error: {e}")
+            print(f"  [ERROR] Error: {e}")
             return False
     
     return True
@@ -79,12 +79,12 @@ def grant_table_permissions(config, principal_arn, database_name, table_name):
             Permissions=['ALL', 'ALTER', 'DELETE', 'DESCRIBE', 'DROP', 'INSERT', 'SELECT'],
             PermissionsWithGrantOption=['ALL', 'ALTER', 'DELETE', 'DESCRIBE', 'DROP', 'INSERT', 'SELECT']
         )
-        print(f"  ✅ Table permissions granted")
+        print(f"  [OK] Table permissions granted")
     except Exception as e:
         if "AlreadyExists" in str(e):
-            print(f"  ✓ Permissions already exist")
+            print(f"  [OK] Permissions already exist")
         else:
-            print(f"  ❌ Error: {e}")
+            print(f"  [ERROR] Error: {e}")
             return False
     
     return True
@@ -115,12 +115,12 @@ def grant_iam_allowed_principals(config, database_name, table_name=None):
             },
             Permissions=['DESCRIBE', 'CREATE_TABLE']
         )
-        print(f"  ✅ Database IAM access granted")
+        print(f"  [OK] Database IAM access granted")
     except Exception as e:
         if "AlreadyExists" in str(e):
-            print(f"  ✓ Already exists")
+            print(f"  [OK] Already exists")
         else:
-            print(f"  ⚠️ {e}")
+            print(f"  [WARN] {e}")
     
     # Table permissions (if specified)
     if table_name:
@@ -137,12 +137,12 @@ def grant_iam_allowed_principals(config, database_name, table_name=None):
                 },
                 Permissions=['SELECT', 'DESCRIBE', 'ALTER', 'DELETE', 'INSERT']
             )
-            print(f"  ✅ Table IAM access granted")
+            print(f"  [OK] Table IAM access granted")
         except Exception as e:
             if "AlreadyExists" in str(e):
-                print(f"  ✓ Already exists")
+                print(f"  [OK] Already exists")
             else:
-                print(f"  ⚠️ {e}")
+                print(f"  [WARN] {e}")
 
 
 def register_s3_location(config, s3_path, role_arn=None):
@@ -164,11 +164,11 @@ def register_s3_location(config, s3_path, role_arn=None):
             )
         else:
             lf.register_resource(ResourceArn=s3_path)
-        print(f"  ✅ S3 location registered")
+        print(f"  [OK] S3 location registered")
     except lf.exceptions.AlreadyExistsException:
-        print(f"  ✓ Already registered")
+        print(f"  [OK] Already registered")
     except Exception as e:
-        print(f"  ⚠️ {e}")
+        print(f"  [WARN] {e}")
 
 
 def main():
@@ -199,7 +199,7 @@ def main():
     if args.s3_path:
         register_s3_location(config, args.s3_path)
     
-    print("\n✅ Lake Formation setup complete!")
+    print("\n[OK] Lake Formation setup complete!")
 
 
 if __name__ == "__main__":

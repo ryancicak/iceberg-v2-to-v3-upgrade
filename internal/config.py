@@ -87,7 +87,7 @@ if __name__ == "__main__":
         cfg = load_config()
         print_config(cfg)
         validate_config(cfg)
-        print("✅ Configuration is valid!")
+        print("[OK] Configuration is valid!")
     except ValueError as e:
-        print(f"❌ Configuration error: {e}")
+        print(f"[ERROR] Configuration error: {e}")
 

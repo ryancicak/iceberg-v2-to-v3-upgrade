@@ -28,7 +28,7 @@ def run_databricks_query(config, sql, warehouse_id=None):
         warehouses = response.json().get('warehouses', [])
         running = [w for w in warehouses if w.get('state') == 'RUNNING']
         if not running:
-            print("❌ No running SQL warehouse found")
+            print("[ERROR] No running SQL warehouse found")
             return None
         warehouse_id = running[0]['id']
         print(f"Using warehouse: {running[0]['name']} ({warehouse_id})")
@@ -68,10 +68,10 @@ def verify_table(config, catalog, database, table):
     result = run_databricks_query(config, sql)
     
     if result['status'] == 'SUCCEEDED':
-        print("   ✅ DESCRIBE succeeded")
+        print("   [OK] DESCRIBE succeeded")
     else:
         error_msg = result['error'].get('message', 'Unknown error')
-        print(f"   ❌ DESCRIBE failed: {error_msg[:200]}")
+        print(f"   [ERROR] DESCRIBE failed: {error_msg[:200]}")
         return False
     
     # Test 2: SELECT
@@ -81,19 +81,19 @@ def verify_table(config, catalog, database, table):
     
     if result['status'] == 'SUCCEEDED':
         rows = result['result'].get('data_array', [])
-        print(f"   ✅ SELECT succeeded - returned {len(rows)} rows")
+        print(f"   [OK] SELECT succeeded - returned {len(rows)} rows")
         for row in rows[:3]:
             print(f"      {row}")
         if len(rows) > 3:
             print(f"      ... and {len(rows) - 3} more")
     else:
         error_msg = result['error'].get('message', 'Unknown error')
-        print(f"   ❌ SELECT failed: {error_msg[:300]}")
+        print(f"   [ERROR] SELECT failed: {error_msg[:300]}")
         
         # Check for specific errors
         if 'ICEBERG' in error_msg.upper():
-            print("\n   🔴 This appears to be an Iceberg format issue.")
-            print("   💡 Try running the upgrade: python internal/upgrade_table.py")
+            print("\n    This appears to be an Iceberg format issue.")
+            print("    Try running the upgrade: python internal/upgrade_table.py")
         
         return False
     
@@ -104,11 +104,11 @@ def verify_table(config, catalog, database, table):
     
     if result['status'] == 'SUCCEEDED':
         count = result['result'].get('data_array', [[0]])[0][0]
-        print(f"   ✅ COUNT succeeded - {count} total rows")
+        print(f"   [OK] COUNT succeeded - {count} total rows")
     else:
-        print(f"   ⚠️ COUNT failed (non-critical)")
+        print(f"   [WARN] COUNT failed (non-critical)")
     
-    print(f"\n✅ Table {full_name} is fully readable in Databricks!")
+    print(f"\n[OK] Table {full_name} is fully readable in Databricks!")
     return True
 
 
@@ -123,15 +123,15 @@ def main():
     config = load_config()
     
     if not config.get("DATABRICKS_HOST") or not config.get("DATABRICKS_TOKEN"):
-        print("❌ DATABRICKS_HOST and DATABRICKS_TOKEN must be set")
+        print("[ERROR] DATABRICKS_HOST and DATABRICKS_TOKEN must be set")
         return
     
     success = verify_table(config, args.catalog, args.database, args.table)
     
     if success:
-        print("\n🎉 Verification passed!")
+        print("\n Verification passed!")
     else:
-        print("\n❌ Verification failed")
+        print("\n[ERROR] Verification failed")
 
 
 if __name__ == "__main__":

@@ -90,7 +90,7 @@ def run_spark_sql_on_emr(config, sql_commands, dry_run=False):
     result = subprocess.run(ssh_cmd, capture_output=True, text=True)
     
     if result.returncode != 0:
-        print(f"❌ Error: {result.stderr}")
+        print(f"[ERROR] Error: {result.stderr}")
         return False
     
     print(result.stdout)
@@ -106,7 +106,7 @@ def upgrade_table_to_v3(config, database, table, dry_run=False):
     # Get table info
     info = get_table_info(config, database, table)
     if not info:
-        print(f"❌ Table {database}.{table} not found in Glue")
+        print(f"[ERROR] Table {database}.{table} not found in Glue")
         return False
     
     print(f"  Location: {info['location']}")
@@ -115,12 +115,12 @@ def upgrade_table_to_v3(config, database, table, dry_run=False):
     
     # Check if it's an Iceberg table
     if info['table_type'].upper() != 'ICEBERG':
-        print(f"⚠️ Skipping - not an Iceberg table (type: {info['table_type']})")
+        print(f"[WARN] Skipping - not an Iceberg table (type: {info['table_type']})")
         return False
     
     # Check if already V3
     if info['format_version'] == '3':
-        print(f"✓ Already on V3 - skipping ALTER, running compaction only")
+        print(f"[OK] Already on V3 - skipping ALTER, running compaction only")
         sql = f"CALL glue_catalog.system.rewrite_data_files(table => '{database}.{table}', options => map('rewrite-all', 'true'));"
     else:
         # Upgrade to V3 and compact
@@ -137,11 +137,11 @@ SELECT 'Upgrade complete for {database}.{table}' as status;
     success = run_spark_sql_on_emr(config, sql.strip().replace('\n', ' '), dry_run=dry_run)
     
     if success and not dry_run:
-        print(f"\n✅ Successfully upgraded {database}.{table} to V3!")
+        print(f"\n[OK] Successfully upgraded {database}.{table} to V3!")
     elif success and dry_run:
         print(f"\n[DRY RUN] Would upgrade {database}.{table} to V3")
     else:
-        print(f"\n❌ Failed to upgrade {database}.{table}")
+        print(f"\n[ERROR] Failed to upgrade {database}.{table}")
     
     return success
 
@@ -189,7 +189,7 @@ def main():
         tables = list_tables_in_database(config, args.database)
         for t in tables:
             version = t['format_version']
-            status = "✅" if version == '3' else "⚠️ V2"
+            status = "[OK]" if version == '3' else "[WARN] V2"
             print(f"  {status} {t['name']} (format-version: {version})")
         return
     
@@ -205,11 +205,11 @@ def main():
         tables_to_upgrade = [t['name'] for t in all_tables if t['format_version'] != '3']
         print(f"\nFound {len(tables_to_upgrade)} tables to upgrade in {args.database}")
     else:
-        print("❌ Please specify --table, --tables, or --all")
+        print("[ERROR] Please specify --table, --tables, or --all")
         sys.exit(1)
     
     if not tables_to_upgrade:
-        print("✅ No tables need upgrading!")
+        print("[OK] No tables need upgrading!")
         return
     
     # Upgrade each table
@@ -224,7 +224,7 @@ def main():
     print(f"{'=' * 60}")
     
     for table, success in results:
-        status = "✅" if success else "❌"
+        status = "[OK]" if success else "[ERROR]"
         print(f"  {status} {args.database}.{table}")
 
 

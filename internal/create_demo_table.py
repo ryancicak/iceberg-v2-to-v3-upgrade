@@ -29,13 +29,13 @@ def create_s3_bucket(config):
                 Bucket=bucket,
                 CreateBucketConfiguration={'LocationConstraint': region}
             )
-        print(f"✅ Created S3 bucket: {bucket}")
+        print(f"[OK] Created S3 bucket: {bucket}")
     except s3.exceptions.BucketAlreadyOwnedByYou:
-        print(f"✓ S3 bucket already exists: {bucket}")
+        print(f"[OK] S3 bucket already exists: {bucket}")
     except s3.exceptions.BucketAlreadyExists:
-        print(f"✓ S3 bucket already exists: {bucket}")
+        print(f"[OK] S3 bucket already exists: {bucket}")
     except Exception as e:
-        print(f"⚠️ Bucket creation: {e}")
+        print(f"[WARN] Bucket creation: {e}")
 
 
 def create_glue_database(config):
@@ -58,11 +58,11 @@ def create_glue_database(config):
                 'LocationUri': f's3://{bucket}/warehouse'
             }
         )
-        print(f"✅ Created Glue database: {database}")
+        print(f"[OK] Created Glue database: {database}")
     except glue.exceptions.AlreadyExistsException:
-        print(f"✓ Glue database already exists: {database}")
+        print(f"[OK] Glue database already exists: {database}")
     except Exception as e:
-        print(f"⚠️ Database creation: {e}")
+        print(f"[WARN] Database creation: {e}")
 
 
 def get_emr_master_dns(config):
@@ -165,11 +165,11 @@ SQLS
     result = subprocess.run(ssh_cmd, capture_output=True, text=True)
     
     if result.returncode != 0:
-        print(f"❌ Error: {result.stderr}")
+        print(f"[ERROR] Error: {result.stderr}")
         return None
     
     print(result.stdout)
-    print(f"\n✅ Demo table created: {database}.{table_name}")
+    print(f"\n[OK] Demo table created: {database}.{table_name}")
     print(f"   This table has V2 merge-on-read delete files that Databricks cannot read.")
     
     return table_name

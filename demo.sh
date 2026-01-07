@@ -23,7 +23,7 @@ echo ""
 # Load environment
 if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
-    echo -e "${GREEN}✓ Loaded .env file${NC}"
+    echo -e "${GREEN}[OK] Loaded .env file${NC}"
 else
     echo -e "${YELLOW}⚠ No .env file found. Using environment variables.${NC}"
 fi
@@ -38,7 +38,7 @@ for var in $REQUIRED_VARS; do
 done
 
 if [ -n "$MISSING" ]; then
-    echo -e "${RED}❌ Missing required environment variables:${MISSING}${NC}"
+    echo -e "${RED}[ERROR] Missing required environment variables:${MISSING}${NC}"
     echo ""
     echo "Please set these in .env or export them:"
     echo "  cp env.example .env"
