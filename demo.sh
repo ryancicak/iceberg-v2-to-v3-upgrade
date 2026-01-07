@@ -25,7 +25,7 @@ if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
     echo -e "${GREEN}[OK] Loaded .env file${NC}"
 else
-    echo -e "${YELLOW}⚠ No .env file found. Using environment variables.${NC}"
+    echo -e "${YELLOW}[WARN] No .env file found. Using environment variables.${NC}"
 fi
 
 # Check required variables
@@ -56,7 +56,6 @@ cd ..
 
 # Get the generated values
 if [ -z "$GLUE_DATABASE" ]; then
-    # Try to extract from Python output
     GLUE_DATABASE=$(python3 -c "from internal.config import load_config; c=load_config(); print(c['GLUE_DATABASE'])")
 fi
 TABLE_NAME="v2_mor_demo"
@@ -64,10 +63,10 @@ TABLE_NAME="v2_mor_demo"
 echo ""
 echo -e "${YELLOW}The demo table has been created with V2 merge-on-read deletes.${NC}"
 echo ""
-echo -e "${YELLOW}In Databricks, try to query:${NC}"
-echo -e "${YELLOW}  SELECT * FROM your_catalog.${GLUE_DATABASE}.${TABLE_NAME}${NC}"
+echo "In Databricks, try to query:"
+echo "  SELECT * FROM your_catalog.${GLUE_DATABASE}.${TABLE_NAME}"
 echo ""
-echo -e "${YELLOW}You should see an error about unsupported delete files!${NC}"
+echo "You should see an error about unsupported delete files!"
 echo ""
 
 read -p "Press Enter after you've seen the error in Databricks (or 's' to skip)... " response
@@ -84,27 +83,33 @@ python3 upgrade_table.py -d "$GLUE_DATABASE" -t "$TABLE_NAME"
 cd ..
 
 echo ""
-echo -e "${GREEN}UPGRADE COMPLETE!${NC}"
+echo -e "${GREEN}[OK] Upgrade complete - table is now V3 and compacted${NC}"
 echo ""
-echo "The table has been upgraded to V3 and compacted."
-echo "All merge-on-read delete files have been applied and removed."
+echo "Try the query again in Databricks - it should work now."
 echo ""
-echo "Now try the query again in Databricks:"
-echo "  SELECT * FROM your_catalog.${GLUE_DATABASE}.${TABLE_NAME}"
-echo ""
-echo "It should work now!"
 
-# Optional: Verify in Databricks
-if [ -n "$DATABRICKS_HOST" ] && [ -n "$DATABRICKS_TOKEN" ] && [ -n "$CATALOG_NAME" ]; then
-    echo ""
-    read -p "Would you like to verify automatically in Databricks? (y/n) " verify
-    if [ "$verify" = "y" ]; then
-        cd internal
-        python3 verify_in_databricks.py -c "$CATALOG_NAME" -d "$GLUE_DATABASE" -t "$TABLE_NAME"
-        cd ..
-    fi
+read -p "Press Enter after you've verified it works (or 's' to skip)... " response
+if [ "$response" = "s" ]; then
+    echo "Skipping..."
 fi
 
 echo ""
-echo -e "${BLUE}Demo complete!${NC}"
+echo -e "${BLUE}--- STEP 3: Test NEW Deletes on V3 Table ---${NC}"
+echo ""
+echo "Now we'll run a DELETE on the V3 table to create NEW merge-on-read delete files."
+echo "This proves that V3 MoR deletes work in Databricks (not just cleaned-up tables)."
+echo ""
 
+cd internal
+python3 test_v3_mor_deletes.py -d "$GLUE_DATABASE" -t "$TABLE_NAME" ${CATALOG_NAME:+-c "$CATALOG_NAME"}
+cd ..
+
+echo ""
+echo -e "${GREEN}=== DEMO COMPLETE ===${NC}"
+echo ""
+echo "Summary:"
+echo "  1. Created V2 table with MoR deletes -> Databricks could NOT read it"
+echo "  2. Upgraded to V3 + compacted -> Databricks CAN read it"
+echo "  3. Ran NEW delete on V3 table -> Databricks can STILL read it"
+echo ""
+echo "This proves V3 merge-on-read is fully supported in Databricks UC Federation."

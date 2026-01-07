@@ -28,10 +28,15 @@ Required env vars:
 
 ## Usage
 
-**Demo mode** - creates a test table, shows the problem, fixes it:
+**Demo mode** - full end-to-end test:
 ```bash
 ./demo.sh
 ```
+
+This runs through:
+1. Create V2 table with MoR deletes (Databricks fails to read)
+2. Upgrade to V3 + compact (Databricks can read)
+3. Run NEW delete on V3 (Databricks can still read - proves V3 MoR works)
 
 **Upgrade existing tables:**
 ```bash
